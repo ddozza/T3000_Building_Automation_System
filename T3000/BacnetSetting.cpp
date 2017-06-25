@@ -19,7 +19,8 @@ bool show_user_list_window = false;
 
 #define TIMER_SYNC_TIMER    1
 #define TIMER_REFRESH_READ    2
-#define TIMER_REFRESH_READ_DELAY    15000
+#define TIMER_REFRESH_READ_DELAY    15
+
 
 IMPLEMENT_DYNAMIC(CBacnetSetting, CDialogEx)
 
@@ -980,13 +981,16 @@ BOOL CBacnetSetting::OnInitDialog()
 	HICON hIcon = NULL; 
 	HINSTANCE hInstResource    = NULL; 
 	hInstResource = AfxFindResourceHandle(MAKEINTRESOURCE(IDI_ICON_OK), RT_GROUP_ICON); 
-	hIcon = (HICON)::LoadImage(hInstResource, MAKEINTRESOURCE(IDI_ICON_OK), IMAGE_ICON, 24, 24, 0); 
+	hIcon = (HICON)::LoadImage(hInstResource, MAKEINTRESOURCE(IDI_ICON_OK), IMAGE_ICON, 24, 24, 0);
 	((CButton *)GetDlgItem(IDC_BUTTON_BAC_IP_CHANGED))->SetIcon(hIcon);
 
 	HICON m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON_DEFAULT_SETTING);
 	SetIcon(m_hIcon,TRUE);
 	ShowWindow(FALSE);
 	GetDlgItem(IDC_BUTTON_BAC_SETTING_OK)->SetFocus();
+
+	SetTimer(TIMER_REFRESH_READ, 1000, NULL);
+
 	return FALSE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -1066,7 +1070,24 @@ void CBacnetSetting::OnTimer(UINT_PTR nIDEvent)
 		break;
 	case TIMER_REFRESH_READ:
 	{
-		KillTimer(TIMER_REFRESH_READ);
+		CString str;
+		//KillTimer(TIMER_REFRESH_READ);
+		if (g_hwnd_now != m_setting_dlg_hwnd)
+		{
+			if (TIMER_1s_Count>0) TIMER_1s_Count = 0;
+			SetWindowText(_T(""));
+			break;
+		}
+		if (TIMER_1s_Count < TIMER_REFRESH_READ_DELAY)
+		{
+			str.Format(_T("Auto refresh after %d"), TIMER_REFRESH_READ_DELAY - TIMER_1s_Count);
+			SetWindowText(str);
+			TIMER_1s_Count += 1;
+			break;
+		}
+		str.Format(_T("Refreshing"));
+		SetWindowText(str);
+		TIMER_1s_Count = 0;
 		if (this->IsWindowVisible())
 		{
 
@@ -1104,7 +1125,7 @@ LRESULT  CBacnetSetting::ResumeMessageCallBack(WPARAM wParam, LPARAM lParam)
 	{
 		Show_Results = temp_cs + _T("Success!");
 		SetPaneString(BAC_SHOW_MISSION_RESULTS,Show_Results);
-
+		TIMER_1s_Count = 0;
 	}
 	else
 	{
@@ -1114,8 +1135,8 @@ LRESULT  CBacnetSetting::ResumeMessageCallBack(WPARAM wParam, LPARAM lParam)
 		SetPaneString(BAC_SHOW_MISSION_RESULTS,Show_Results);
 
 	}
-	KillTimer(TIMER_REFRESH_READ);
-	SetTimer(TIMER_REFRESH_READ, TIMER_REFRESH_READ_DELAY, NULL);
+	//KillTimer(TIMER_REFRESH_READ);
+	//SetTimer(TIMER_REFRESH_READ, TIMER_REFRESH_READ_DELAY, NULL);
 
 	if(pInvoke)
 		delete pInvoke;
@@ -2129,5 +2150,4 @@ void CBacnetSetting::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 	CDialog::OnVScroll(nSBCode, nPos, pScrollBar);
 }
-
 

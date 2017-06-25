@@ -19,7 +19,8 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
-
+private:
+	int TIMER_1s_Count = 0;
 public:
 	afx_msg void OnBnClickedButtonBacTest();
 	CDateTimeCtrl m_cm5_time_picker;
